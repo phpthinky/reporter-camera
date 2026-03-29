@@ -59,7 +59,7 @@ class CameraController extends Controller
                 mkdir($dir, 0755, true);
             }
 
-            $filename = 'photo_' . time() . '_' . uniqid() . '.jpg';
+            $filename = basename($sourcePath);
             $destPath = $dir . '/' . $filename;
 
             $bytes = file_get_contents($sourcePath);
