@@ -42,19 +42,39 @@ class CameraController extends Controller
 
             if (!file_exists($sourcePath)) {
                 return response()->json([
-                    'error' => 'File not found',
+                    'error' => 'Source file not found',
                     'path'  => $sourcePath,
                 ]);
             }
 
             // Prevent duplicate
-            $existing = DB::table('photos')->where('path', $sourcePath)->first();
+            $existing = DB::table('photos')->where('source_path', $sourcePath)->first();
             if ($existing) {
                 return response()->json(['url' => '/photo/' . $existing->id]);
             }
 
+            // Copy from volatile cache/temp to persistent storage
+            $dir = storage_path('app/private/photos');
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            $filename = 'photo_' . time() . '_' . uniqid() . '.jpg';
+            $destPath = $dir . '/' . $filename;
+
+            $bytes = file_get_contents($sourcePath);
+            if ($bytes === false || file_put_contents($destPath, $bytes) === false) {
+                return response()->json([
+                    'error' => 'Failed to write to storage',
+                    'src'   => $sourcePath,
+                    'dest'  => $destPath,
+                    'dirOk' => is_dir($dir),
+                ]);
+            }
+
             $id = DB::table('photos')->insertGetId([
-                'path'        => $sourcePath,
+                'source_path' => $sourcePath,
+                'path'        => $destPath,
                 'taken_at'    => now(),
                 'created_at'  => now(),
                 'updated_at'  => now(),
