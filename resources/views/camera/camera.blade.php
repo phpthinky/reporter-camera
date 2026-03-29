@@ -44,7 +44,7 @@
         if (photoSaving) return;
         photoSaving = true;
 
-        status.textContent = 'Saving...';
+        status.textContent = 'Path: ' + path;
 
         fetch('/camera/save?path=' + encodeURIComponent(path))
         .then(r => r.json())
@@ -61,7 +61,7 @@
             photoSaving = false;
         })
         .catch(err => {
-            status.textContent = '❌ ' + err.message;
+            status.textContent = '❌ fetch error: ' + err.message + ' | path: ' + path;
             photoSaving = false;
         });
     }
