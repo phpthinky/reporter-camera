@@ -19,7 +19,7 @@
         <img src="file://{{ $photo->path }}" alt="photo">
         <small class="text-muted d-block mt-1">
             📅 {{ $photo->taken_at }}<br>
-            📁 {{ $photo->path }}
+            📁 {{ basename($photo->path) }}
         </small>
     </div>
     @empty
