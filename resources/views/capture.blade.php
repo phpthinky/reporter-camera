@@ -59,12 +59,19 @@
 
     function showPreview(path) {
         try {
-            selectedPath          = path;
-            preview.src           = 'file://' + path;
-            preview.style.display = 'block';
-            placeholder.style.display = 'none';
-            saveBar.style.display = 'block';
-            status.textContent    = 'Ready to save';
+            selectedPath = path;
+            status.textContent = '📂 ' + path;
+
+            preview.src = '/camera/preview?path=' + encodeURIComponent(path);
+            preview.onload  = () => {
+                preview.style.display     = 'block';
+                placeholder.style.display = 'none';
+                saveBar.style.display     = 'block';
+                status.textContent        = 'Ready to save';
+            };
+            preview.onerror = () => {
+                status.textContent = '❌ Could not load preview — path: ' + path;
+            };
         } catch (err) {
             status.textContent = '❌ ' + err.message;
         }

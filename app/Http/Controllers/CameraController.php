@@ -94,6 +94,23 @@ class CameraController extends Controller
         }
     }
 
+    public function preview(Request $request)
+    {
+        try {
+            $path = $request->query('path');
+
+            if (!$path || !file_exists($path)) {
+                return response('', 404);
+            }
+
+            $data = file_get_contents($path);
+            return response($data, 200)->header('Content-Type', 'image/jpeg');
+
+        } catch (\Throwable $e) {
+            return response('', 500);
+        }
+    }
+
     public function serve(int $id)
     {
         try {
