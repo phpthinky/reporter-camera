@@ -42,62 +42,41 @@ class CameraController extends Controller
 
             if (!file_exists($sourcePath)) {
                 return response()->json([
-                    'error'   => 'Source file not found',
-                    'path'    => $sourcePath,
-                    'storage' => storage_path('app/private/photos'),
+                    'error' => 'File not found',
+                    'path'  => $sourcePath,
                 ]);
             }
 
             // Prevent duplicate
-            $existing = DB::table('photos')->where('source_path', $sourcePath)->first();
+            $existing = DB::table('photos')->where('path', $sourcePath)->first();
             if ($existing) {
-                return response()->json(['url' => '/photo/' . basename($existing->path)]);
+                return response()->json(['url' => '/photo/' . $existing->id]);
             }
 
-            $dir = storage_path('app/private/photos');
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-
-            $filename = 'photo_' . time() . '_' . uniqid() . '.jpg';
-            $destPath = $dir . '/' . $filename;
-
-            $bytes = file_get_contents($sourcePath);
-            if ($bytes === false || file_put_contents($destPath, $bytes) === false) {
-                return response()->json([
-                    'error'  => 'Failed to write photo to storage',
-                    'src'    => $sourcePath,
-                    'dest'   => $destPath,
-                    'dirOk'  => is_dir($dir),
-                ]);
-            }
-
-            DB::table('photos')->insert([
-                'source_path' => $sourcePath,
-                'path'        => $destPath,
+            $id = DB::table('photos')->insertGetId([
+                'path'        => $sourcePath,
                 'taken_at'    => now(),
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ]);
 
-            return response()->json(['url' => '/photo/' . $filename]);
+            return response()->json(['url' => '/photo/' . $id]);
 
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage(), 'trace' => $e->getFile() . ':' . $e->getLine()]);
         }
     }
 
-    public function serve(string $filename)
+    public function serve(int $id)
     {
         try {
-            $filename = basename($filename);
-            $path     = storage_path('app/private/photos/' . $filename);
+            $photo = DB::table('photos')->find($id);
 
-            if (!file_exists($path)) {
-                return response()->json(['error' => 'Not found: ' . $path], 404);
+            if (!$photo || !file_exists($photo->path)) {
+                return response()->json(['error' => 'Photo not found', 'id' => $id], 404);
             }
 
-            $data = file_get_contents($path);
+            $data = file_get_contents($photo->path);
             return response($data, 200)->header('Content-Type', 'image/jpeg');
 
         } catch (\Throwable $e) {

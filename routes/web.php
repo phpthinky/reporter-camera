@@ -8,4 +8,4 @@ Route::get('/camera/photo', [CameraController::class, 'photo']);
 Route::get('/camera/gallery', [CameraController::class, 'gallery']);
 Route::get('/camera/save', [CameraController::class, 'save']);
 Route::get('/photos', [CameraController::class, 'photos']);
-Route::get('/photo/{filename}', [CameraController::class, 'serve'])->where('filename', '[^/]+');
+Route::get('/photo/{id}', [CameraController::class, 'serve'])->where('id', '[0-9]+');
