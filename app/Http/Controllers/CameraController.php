@@ -41,9 +41,10 @@ class CameraController extends Controller
             }
 
             if (!file_exists($sourcePath)) {
+                // Temp file already purged by the time save() ran
                 return response()->json([
-                    'error' => 'Source file not found',
-                    'path'  => $sourcePath,
+                    'error'  => 'Temp file already gone — capture it again',
+                    'source' => $sourcePath,
                 ]);
             }
 
@@ -53,13 +54,13 @@ class CameraController extends Controller
                 return response()->json(['url' => '/photo/' . $existing->id]);
             }
 
-            // Copy from volatile cache/temp to persistent storage
+            // Copy from volatile cache/temp into persistent storage under a clean name
             $dir = storage_path('app/private/photos');
             if (!is_dir($dir)) {
                 mkdir($dir, 0755, true);
             }
 
-            $filename = basename($sourcePath);
+            $filename = 'IMG_' . date('Ymd_His') . '_' . substr(md5($sourcePath), 0, 6) . '.jpg';
             $destPath = $dir . '/' . $filename;
 
             $bytes = file_get_contents($sourcePath);
