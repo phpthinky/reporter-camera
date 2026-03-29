@@ -31,11 +31,6 @@ class CameraController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function photos()
-    {
-        $photos = DB::table('photos')->orderByDesc('taken_at')->get();
-        return view('camera.photos', compact('photos'));
-    }
 
     public function save(Request $request)
     {
