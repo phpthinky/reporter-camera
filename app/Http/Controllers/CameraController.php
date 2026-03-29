@@ -10,7 +10,13 @@ class CameraController extends Controller
 {
     public function index()
     {
-        return view('camera.camera');
+        $photos = DB::table('photos')->orderByDesc('taken_at')->get();
+        return view('home', compact('photos'));
+    }
+
+    public function capture()
+    {
+        return view('capture');
     }
 
     public function photo()
