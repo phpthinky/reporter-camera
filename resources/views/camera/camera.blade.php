@@ -41,35 +41,45 @@
     let photoSaving = false;
 
     function showPhoto(path) {
-        if (photoSaving) return;
-        photoSaving = true;
+        try {
+            if (photoSaving) return;
+            photoSaving = true;
 
-        status.textContent = 'Path: ' + path;
+            // Show preview immediately from DCIM path — no round-trip needed
+            preview.src           = 'file://' + path;
+            preview.style.display = 'block';
+            status.textContent    = 'Saving...';
 
-        fetch('/camera/save?path=' + encodeURIComponent(path))
-        .then(r => r.json())
-        .then(data => {
-            if (data.url) {
-                preview.src            = data.url;
-                preview.style.display  = 'block';
-                savedPath.textContent  = data.url;
-                savedMsg.style.display = 'block';
-                status.textContent     = '✅ Done!';
-            } else {
-                status.textContent = '❌ ' + JSON.stringify(data);
-            }
+            fetch('/camera/save?path=' + encodeURIComponent(path))
+            .then(r => r.json())
+            .then(data => {
+                if (data.url) {
+                    savedPath.textContent  = path;
+                    savedMsg.style.display = 'block';
+                    status.textContent     = '✅ Saved!';
+                } else {
+                    status.textContent = '❌ ' + JSON.stringify(data);
+                }
+                photoSaving = false;
+            })
+            .catch(err => {
+                status.textContent = '❌ ' + err.message;
+                photoSaving = false;
+            });
+        } catch (err) {
+            status.textContent = '❌ showPhoto: ' + err.message;
             photoSaving = false;
-        })
-        .catch(err => {
-            status.textContent = '❌ fetch error: ' + err.message + ' | path: ' + path;
-            photoSaving = false;
-        });
+        }
     }
 
     function setupListeners() {
         Native.on(@js(PhotoTaken::class), (payload) => {
-            status.textContent = 'PhotoTaken received...';
-            if (payload.path) showPhoto(payload.path);
+            try {
+                status.textContent = 'PhotoTaken received...';
+                if (payload && payload.path) showPhoto(payload.path);
+            } catch (err) {
+                status.textContent = '❌ PhotoTaken: ' + err.message;
+            }
         });
 
         Native.on(@js(PhotoCancelled::class), () => {
@@ -77,10 +87,14 @@
         });
 
         Native.on(@js(MediaSelected::class), (payload) => {
-            status.textContent = 'Media selected...';
-            if (payload.files && payload.files.length > 0) {
-                const file = payload.files[0];
-                showPhoto(typeof file === 'string' ? file : file.path);
+            try {
+                status.textContent = 'Media selected...';
+                if (payload && payload.files && payload.files.length > 0) {
+                    const file = payload.files[0];
+                    showPhoto(typeof file === 'string' ? file : file.path);
+                }
+            } catch (err) {
+                status.textContent = '❌ MediaSelected: ' + err.message;
             }
         });
 
