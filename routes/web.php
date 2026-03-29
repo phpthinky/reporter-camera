@@ -9,7 +9,7 @@ Route::get('/', [CameraController::class, 'index']);
 Route::get('/camera/photo', [CameraController::class, 'photo']);
 Route::get('/camera/gallery', [CameraController::class, 'gallery']);
 Route::get('/photos', [CameraController::class, 'photos']);
-Route::get('/camera/save', function (Request $request) {
+oute::get('/camera/save', function (Request $request) {
     $sourcePath = $request->query('path');
 
     if (!$sourcePath || !file_exists($sourcePath)) {
