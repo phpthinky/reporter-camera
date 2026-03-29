@@ -18,19 +18,40 @@ Route::get('/camera/save', function (Request $request) {
 
     // Prevent duplicate — check if same source path already saved
     $existing = DB::table('photos')
-        ->where('path', $sourcePath)
+        ->where('source_path', $sourcePath)
         ->first();
 
     if ($existing) {
-        return response()->json(['url' => 'file://' . $sourcePath]);
+        return response()->json(['url' => '/photo/' . basename($existing->path)]);
     }
 
-    DB::table('photos')->insert([
-        'path'        => $sourcePath,
-        'taken_at'    => now(),
-        'created_at'  => now(),
-        'updated_at'  => now(),
-    ]);
+    $dir = storage_path('app/private/photos');
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
 
-    return response()->json(['url' => 'file://' . $sourcePath]);
+    $filename = 'photo_' . time() . '.jpg';
+    $destPath = $dir . '/' . $filename;
+
+    if (copy($sourcePath, $destPath)) {
+        DB::table('photos')->insert([
+            'source_path' => $sourcePath,
+            'path'        => $destPath,
+            'taken_at'    => now(),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return response()->json(['url' => '/photo/' . $filename]);
+    }
+
+    return response()->json(['error' => 'Copy failed']);
 });
+
+Route::get('/photo/{filename}', function ($filename) {
+    $path = storage_path('app/private/photos/' . $filename);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+})->where('filename', '[^/]+');

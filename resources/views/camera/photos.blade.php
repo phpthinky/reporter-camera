@@ -16,7 +16,7 @@
 
     @forelse($photos as $photo)
     <div class="photo-card mb-3 p-2 border border-secondary rounded">
-        <img src="file://{{ $photo->path }}" alt="photo">
+        <img src="/photo/{{ basename($photo->path) }}" alt="photo">
         <small class="text-muted d-block mt-1">
             📅 {{ $photo->taken_at }}<br>
             📁 {{ basename($photo->path) }}
